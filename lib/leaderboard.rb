@@ -675,7 +675,21 @@ class Leaderboard
       leaders[offset] if leaders
     end
   end
-  
+
+  # Retrieve the first member from the leaderboard, with member data
+  #
+  # @return the top item in the leaderboard
+  def top_member(options = {})
+    member_at(1, { :with_member_data => true }.merge(options))
+  end
+
+  # Retrieve the last member from the leaderboard, with member data
+  #
+  # @return the bottom item in the leaderboard
+  def bottom_member(options = {})
+    member_at(total_members, { :with_member_data => true }.merge(options))
+  end
+
   # Retrieve a page of leaders from the leaderboard around a given member.
   #
   # @param member [String] Member name.

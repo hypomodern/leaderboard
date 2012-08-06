@@ -272,6 +272,20 @@ describe 'Leaderboard' do
     @leaderboard.member_at(1, :use_zero_index_for_rank => true)[:rank].should == 0
   end
 
+  it 'should return the first member when calling #top_member' do
+    rank_members_in_leaderboard(10)
+    top = @leaderboard.top_member
+    top[:rank].should == 1
+    top[:member_data].should == { 'member_name' => 'Leaderboard member 10' }
+  end
+
+  it 'should return the last member when calling #bottom_member' do
+    rank_members_in_leaderboard(10)
+    bot = @leaderboard.bottom_member
+    bot[:rank].should == 10
+    bot[:member_data].should == { 'member_name' => 'Leaderboard member 1' }
+  end
+
   it 'should return the correct information when calling around_me' do
     rank_members_in_leaderboard(Leaderboard::DEFAULT_PAGE_SIZE * 3 + 1)
 
