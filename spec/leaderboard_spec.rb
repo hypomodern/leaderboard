@@ -14,7 +14,7 @@ describe 'Leaderboard' do
 
   it 'should be initialized with defaults' do
     @leaderboard.leaderboard_name.should == 'name'
-    @leaderboard.page_size.should == Leaderboard::DEFAULT_PAGE_SIZE 
+    @leaderboard.page_size.should == Leaderboard::DEFAULT_PAGE_SIZE
   end
 
   it 'should be able to disconnect its connection to Redis' do
@@ -31,14 +31,14 @@ describe 'Leaderboard' do
 
   it 'should set the page size to the default page size if passed an invalid value' do
     some_leaderboard = Leaderboard.new('name', {:page_size => 0})
-    
+
     some_leaderboard.page_size.should be(Leaderboard::DEFAULT_PAGE_SIZE)
     some_leaderboard.disconnect
   end
 
   it 'should allow you to delete a leaderboard' do
     rank_members_in_leaderboard
-    
+
     @redis_connection.exists('name').should be_true
     @leaderboard.delete_leaderboard
     @redis_connection.exists('name').should be_false
@@ -47,7 +47,7 @@ describe 'Leaderboard' do
   it 'should allow you to pass in an existing redis connection in the initializer' do
     @leaderboard = Leaderboard.new('name', Leaderboard::DEFAULT_OPTIONS, {:redis_connection => @redis_connection})
     rank_members_in_leaderboard
-    
+
     @redis_connection.info["connected_clients"].to_i.should be(1)
   end
 
@@ -59,7 +59,7 @@ describe 'Leaderboard' do
 
   it 'should return the correct number of members in a given score range' do
     rank_members_in_leaderboard(5)
-    
+
     @leaderboard.total_members_in_score_range(2, 4).should be(3)
   end
 
@@ -72,30 +72,30 @@ describe 'Leaderboard' do
 
   it 'should return the correct score when calling score_for' do
     rank_members_in_leaderboard(5)
-    
+
     @leaderboard.score_for('member_4').should == 4
   end
 
   it 'should return the correct total pages' do
     rank_members_in_leaderboard(10)
-    
+
     @leaderboard.total_pages.should be(1)
     @leaderboard.total_pages(5).should be(2)
-    
+
     @redis_connection.flushdb
-    
+
     rank_members_in_leaderboard(Leaderboard::DEFAULT_PAGE_SIZE + 1)
-    
+
     @leaderboard.total_pages.should be(2)
   end
 
   it 'should return the correct list when calling leaders' do
     rank_members_in_leaderboard(25)
-    
+
     @leaderboard.total_members.should be(25)
 
     leaders = @leaderboard.leaders(1)
-        
+
     leaders.size.should be(25)
     leaders[0][:member].should == 'member_25'
     leaders[-2][:member].should == 'member_2'
@@ -105,11 +105,11 @@ describe 'Leaderboard' do
 
   it 'should return the correct list when calling members' do
     rank_members_in_leaderboard(25)
-    
+
     @leaderboard.total_members.should be(25)
 
     members = @leaderboard.members(1)
-        
+
     members.size.should be(25)
     members[0][:member].should == 'member_25'
     members[-2][:member].should == 'member_2'
@@ -119,12 +119,12 @@ describe 'Leaderboard' do
 
   it 'should return the correct number of members when calling leaders with multiple pages' do
     rank_members_in_leaderboard(Leaderboard::DEFAULT_PAGE_SIZE * 3 + 1)
-    
+
     @leaderboard.total_members.should be(Leaderboard::DEFAULT_PAGE_SIZE * 3 + 1)
 
     leaders = @leaderboard.leaders(1)
     leaders.size.should be(@leaderboard.page_size)
-    
+
     leaders = @leaderboard.leaders(2)
     leaders.size.should be(@leaderboard.page_size)
 
@@ -133,10 +133,10 @@ describe 'Leaderboard' do
 
     leaders = @leaderboard.leaders(4)
     leaders.size.should be(1)
-    
+
     leaders = @leaderboard.leaders(-5)
     leaders.size.should be(@leaderboard.page_size)
-    
+
     leaders = @leaderboard.leaders(10)
     leaders.size.should be(1)
   end
@@ -179,26 +179,26 @@ describe 'Leaderboard' do
 
   it 'should allow you to retrieve leaders without scores and ranks' do
     rank_members_in_leaderboard(Leaderboard::DEFAULT_PAGE_SIZE)
-    
+
     @leaderboard.total_members.should be(Leaderboard::DEFAULT_PAGE_SIZE)
     leaders = @leaderboard.leaders(1, {:with_scores => false, :with_rank => false})
 
     member_25 = {:member => 'member_25'}
     leaders[0].should == member_25
-    
+
     member_1 = {:member => 'member_1'}
     leaders[24].should == member_1
   end
 
   it 'should allow you to retrieve leaders with extra data' do
     rank_members_in_leaderboard(Leaderboard::DEFAULT_PAGE_SIZE)
-    
+
     @leaderboard.total_members.should be(Leaderboard::DEFAULT_PAGE_SIZE)
     leaders = @leaderboard.leaders(1, {:with_scores => false, :with_rank => false, :with_member_data => true})
 
     member_25 = {:member => 'member_25', :member_data => { "member_name" => "Leaderboard member 25" }}
     leaders[0].should == member_25
-    
+
     member_1 = {:member => 'member_1', :member_data => { "member_name" => "Leaderboard member 1" }}
     leaders[24].should == member_1
   end
@@ -231,7 +231,7 @@ describe 'Leaderboard' do
 
     leaders = @leaderboard.leaders(1, :page_size => 1)
     leaders.size.should be(1)
-    
+
     leaders = @leaderboard.leaders(1, :with_rank => false)
     leaders.size.should be(Leaderboard::DEFAULT_PAGE_SIZE)
     member_26 = {:member => 'member_26', :score => 26}
@@ -290,25 +290,25 @@ describe 'Leaderboard' do
     rank_members_in_leaderboard(Leaderboard::DEFAULT_PAGE_SIZE * 3 + 1)
 
     @leaderboard.total_members.should be(Leaderboard::DEFAULT_PAGE_SIZE * 3 + 1)
-    
+
     leaders_around_me = @leaderboard.around_me('member_30')
     (leaders_around_me.size / 2).should be(@leaderboard.page_size / 2)
-    
+
     leaders_around_me = @leaderboard.around_me('member_1')
     leaders_around_me.size.should be(@leaderboard.page_size / 2 + 1)
-    
+
     leaders_around_me = @leaderboard.around_me('member_76')
     (leaders_around_me.size / 2).should be(@leaderboard.page_size / 2)
   end
 
   it 'should return the correct information when calling ranked_in_list' do
     rank_members_in_leaderboard(Leaderboard::DEFAULT_PAGE_SIZE)
-    
+
     @leaderboard.total_members.should be(Leaderboard::DEFAULT_PAGE_SIZE)
-    
+
     members = ['member_1', 'member_5', 'member_10']
     ranked_members = @leaderboard.ranked_in_list(members, Leaderboard::DEFAULT_LEADERBOARD_REQUEST_OPTIONS)
-    
+
     ranked_members.size.should be(3)
 
     ranked_members[0][:rank].should be(25)
@@ -323,12 +323,12 @@ describe 'Leaderboard' do
 
   it 'should return the correct information when calling ranked_in_list without scores' do
     rank_members_in_leaderboard(Leaderboard::DEFAULT_PAGE_SIZE)
-    
+
     @leaderboard.total_members.should be(Leaderboard::DEFAULT_PAGE_SIZE)
-    
+
     members = ['member_1', 'member_5', 'member_10']
     ranked_members = @leaderboard.ranked_in_list(members, {:with_scores => false, :with_rank => true, :use_zero_index_for_rank => false})
-    
+
     ranked_members.size.should be(3)
     ranked_members[0][:rank].should be(25)
     ranked_members[1][:rank].should be(21)
@@ -337,45 +337,45 @@ describe 'Leaderboard' do
 
   it 'should allow you to remove members' do
     rank_members_in_leaderboard(Leaderboard::DEFAULT_PAGE_SIZE)
-    
+
     @leaderboard.total_members.should be(Leaderboard::DEFAULT_PAGE_SIZE)
-    
+
     @leaderboard.remove_member('member_1')
-    
+
     @leaderboard.total_members.should be(Leaderboard::DEFAULT_PAGE_SIZE - 1)
     @leaderboard.rank_for('member_1').should be_nil
   end
 
   it 'should allow you to change the score for a member' do
-    @leaderboard.rank_member('member_1', 5)    
+    @leaderboard.rank_member('member_1', 5)
     @leaderboard.score_for('member_1').should == 5
 
-    @leaderboard.change_score_for('member_1', 5)    
+    @leaderboard.change_score_for('member_1', 5)
     @leaderboard.score_for('member_1').should == 10
 
-    @leaderboard.change_score_for('member_1', -5)    
+    @leaderboard.change_score_for('member_1', -5)
     @leaderboard.score_for('member_1').should == 5
   end
 
   it 'should allow you to check if a member exists' do
     @leaderboard.rank_member('member_1', 10)
-    
+
     @leaderboard.check_member?('member_1').should be_true
     @leaderboard.check_member?('member_2').should be_false
   end
 
   it 'should allow you to change the page size and have that reflected in the size of the result set' do
     rank_members_in_leaderboard(Leaderboard::DEFAULT_PAGE_SIZE)
-    
+
     @leaderboard.page_size = 5
-    
+
     @leaderboard.total_pages.should be(5)
     @leaderboard.leaders(1).size.should be(5)
   end
 
   it 'should not allow you to set the page size to an invalid page size' do
     rank_members_in_leaderboard(Leaderboard::DEFAULT_PAGE_SIZE)
-    
+
     @leaderboard.page_size = 0
     @leaderboard.total_pages.should be(1)
     @leaderboard.leaders(1).size.should be(Leaderboard::DEFAULT_PAGE_SIZE)
@@ -383,18 +383,18 @@ describe 'Leaderboard' do
 
   it 'should return the correct information when calling score_and_rank_for' do
     rank_members_in_leaderboard
-    
+
     data = @leaderboard.score_and_rank_for('member_1')
-    data[:member].should == 'member_1' 
+    data[:member].should == 'member_1'
     data[:score].should == 1
     data[:rank].should == 5
   end
 
   it 'should allow you to remove members in a given score range' do
     rank_members_in_leaderboard
-    
+
     @leaderboard.total_members.should be(5)
-    
+
     @leaderboard.rank_member('cheater_1', 100)
     @leaderboard.rank_member('cheater_2', 101)
     @leaderboard.rank_member('cheater_3', 102)
@@ -402,9 +402,9 @@ describe 'Leaderboard' do
     @leaderboard.total_members.should be(8)
 
     @leaderboard.remove_members_in_score_range(100, 102)
-    
+
     @leaderboard.total_members.should be(5)
-    
+
     leaders = @leaderboard.leaders(1)
     leaders.each do |leader|
       leader[:score].should be < 100
@@ -414,24 +414,24 @@ describe 'Leaderboard' do
   it 'should allow you to merge leaderboards' do
     foo = Leaderboard.new('foo', Leaderboard::DEFAULT_LEADERBOARD_REQUEST_OPTIONS, :host => "127.0.0.1", :db => 15)
     bar = Leaderboard.new('bar', Leaderboard::DEFAULT_LEADERBOARD_REQUEST_OPTIONS, :host => "127.0.0.1", :db => 15)
-    
+
     foo.rank_member('foo_1', 1)
     foo.rank_member('foo_2', 2)
     bar.rank_member('bar_1', 3)
     bar.rank_member('bar_2', 4)
     bar.rank_member('bar_3', 5)
-    
+
     foobar_keys = foo.merge_leaderboards('foobar', ['bar'])
     foobar_keys.should be(5)
-    
+
     foobar = Leaderboard.new('foobar', Leaderboard::DEFAULT_LEADERBOARD_REQUEST_OPTIONS, :host => "127.0.0.1", :db => 15)
     foobar.total_members.should be(5)
-    
+
     first_leader_in_foobar = foobar.leaders(1).first
     first_leader_in_foobar[:rank].should == 1
     first_leader_in_foobar[:member].should == 'bar_3'
     first_leader_in_foobar[:score].should == 5
-    
+
     foo.disconnect
     bar.disconnect
     foobar.disconnect
@@ -440,25 +440,25 @@ describe 'Leaderboard' do
   it 'should allow you to intersect leaderboards' do
     foo = Leaderboard.new('foo', Leaderboard::DEFAULT_LEADERBOARD_REQUEST_OPTIONS, :host => "127.0.0.1", :db => 15)
     bar = Leaderboard.new('bar', Leaderboard::DEFAULT_LEADERBOARD_REQUEST_OPTIONS, :host => "127.0.0.1", :db => 15)
-    
+
     foo.rank_member('foo_1', 1)
     foo.rank_member('foo_2', 2)
     foo.rank_member('bar_3', 6)
     bar.rank_member('bar_1', 3)
     bar.rank_member('foo_1', 4)
     bar.rank_member('bar_3', 5)
-    
-    foobar_keys = foo.intersect_leaderboards('foobar', ['bar'], {:aggregate => :max})    
+
+    foobar_keys = foo.intersect_leaderboards('foobar', ['bar'], {:aggregate => :max})
     foobar_keys.should be(2)
-    
+
     foobar = Leaderboard.new('foobar', Leaderboard::DEFAULT_LEADERBOARD_REQUEST_OPTIONS, :host => "127.0.0.1", :db => 15)
     foobar.total_members.should be(2)
-    
+
     first_leader_in_foobar = foobar.leaders(1).first
     first_leader_in_foobar[:rank].should == 1
     first_leader_in_foobar[:member].should == 'bar_3'
     first_leader_in_foobar[:score].should == 6
-    
+
     foo.disconnect
     bar.disconnect
     foobar.disconnect
@@ -466,14 +466,14 @@ describe 'Leaderboard' do
 
   it 'should respect the with_scores option in the massage_leader_data method' do
     rank_members_in_leaderboard(25)
-    
+
     @leaderboard.total_members.should be(25)
 
     leaders = @leaderboard.leaders(1, {:with_scores => false, :with_rank => false})
     leaders[0][:member].should_not be_nil
     leaders[0][:score].should be_nil
     leaders[0][:rank].should be_nil
-    
+
     @leaderboard.page_size = 25
     leaders = @leaderboard.leaders(1, {:with_scores => false, :with_rank => false})
     leaders.size.should be(25)
@@ -483,7 +483,7 @@ describe 'Leaderboard' do
     leaders[0][:member].should_not be_nil
     leaders[0][:score].should_not be_nil
     leaders[0][:rank].should_not be_nil
-    
+
     @leaderboard.page_size = 25
     leaders = @leaderboard.leaders(1, Leaderboard::DEFAULT_LEADERBOARD_REQUEST_OPTIONS)
     leaders.size.should be(25)
@@ -491,14 +491,14 @@ describe 'Leaderboard' do
 
   it 'should return the correct number of pages when calling total_pages_in page size option' do
     rank_members_in_leaderboard(25)
-    
+
     @leaderboard.total_pages_in(@leaderboard.leaderboard_name).should be(1)
     @leaderboard.total_pages_in(@leaderboard.leaderboard_name, 5).should be(5)
   end
 
   it 'should return the correct number of members when calling leaders with a page_size option' do
     rank_members_in_leaderboard(25)
-    
+
     @leaderboard.leaders(1, Leaderboard::DEFAULT_LEADERBOARD_REQUEST_OPTIONS.merge({:page_size => 5})).size.should be(5)
     @leaderboard.leaders(1, Leaderboard::DEFAULT_LEADERBOARD_REQUEST_OPTIONS.merge({:page_size => 10})).size.should be(10)
     @leaderboard.leaders(2, Leaderboard::DEFAULT_LEADERBOARD_REQUEST_OPTIONS.merge({:page_size => 10})).size.should be(10)
@@ -507,7 +507,7 @@ describe 'Leaderboard' do
 
   it 'should return the correct number of members when calling around_me with a page_size options' do
     rank_members_in_leaderboard(Leaderboard::DEFAULT_PAGE_SIZE * 3 + 1)
-    
+
     leaders_around_me = @leaderboard.around_me('member_30', Leaderboard::DEFAULT_LEADERBOARD_REQUEST_OPTIONS.merge({:page_size => 3}))
     leaders_around_me.size.should be(3)
     leaders_around_me[0][:member].should == 'member_31'
@@ -516,7 +516,7 @@ describe 'Leaderboard' do
 
   it 'should return the correct information when calling percentile_for' do
     rank_members_in_leaderboard(12)
-    
+
     @leaderboard.percentile_for('member_1').should == 0
     @leaderboard.percentile_for('member_2').should == 9
     @leaderboard.percentile_for('member_3').should == 17
@@ -526,14 +526,14 @@ describe 'Leaderboard' do
 
   it 'should not throw an exception when calling around_me with a member not in the leaderboard' do
     rank_members_in_leaderboard(Leaderboard::DEFAULT_PAGE_SIZE * 3 + 1)
-    
+
     leaders_around_me = @leaderboard.around_me('jones', Leaderboard::DEFAULT_LEADERBOARD_REQUEST_OPTIONS.merge({:page_size => 3}))
     leaders_around_me.size.should be(0)
   end
 
   it 'should not throw an exception when calling score_and_rank_for with a member not in the leaderboard' do
     score_and_rank_for_member = @leaderboard.score_and_rank_for('jones')
-  
+
     score_and_rank_for_member[:member].should == 'jones'
     score_and_rank_for_member[:score].should == 0.0
     score_and_rank_for_member[:rank].should be_nil
@@ -580,7 +580,7 @@ describe 'Leaderboard' do
   it 'should set an expire on the leaderboard' do
     rank_members_in_leaderboard
 
-    @leaderboard.expire_leaderboard(3)    
+    @leaderboard.expire_leaderboard(3)
     @redis_connection.ttl(@leaderboard.leaderboard_name).tap do |ttl|
       ttl.should be > 1
       ttl.should be <= 3
@@ -615,7 +615,7 @@ describe 'Leaderboard' do
     rank_members_in_leaderboard(25)
 
     leaders = @leaderboard.leaders(1)
-        
+
     leaders.size.should be(25)
     leaders[0][:member].should == 'member_25'
     leaders[-2][:member].should == 'member_2'
@@ -625,7 +625,7 @@ describe 'Leaderboard' do
     @leaderboard.reverse = true
 
     leaders = @leaderboard.leaders(1)
-        
+
     leaders.size.should be(25)
     leaders[0][:member].should == 'member_1'
     leaders[-2][:member].should == 'member_24'
